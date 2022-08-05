@@ -3,7 +3,7 @@ use rss::Channel;
 use std::error::Error;
 
 // interface:
-// substack_export http://name.substack.com
+// substack_export name.substack.com
 
 #[derive(Debug)]
 struct Post {
