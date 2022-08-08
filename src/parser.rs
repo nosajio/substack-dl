@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset, Utc};
 use html2md::parse_html;
 use rss::Channel;
 use std::error::Error;
@@ -5,7 +6,6 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-// use std::path::Path;
 
 pub struct Parser {
     pub output_dir: String,
@@ -111,15 +111,19 @@ pub struct Post {
     title: String,
     md: String,
     html: String,
-    pubdate: String,
+    pubdate: DateTime<FixedOffset>,
 }
 
 impl Post {
     fn new(html: &str, md: &str, url: &str, title: &str, pubdate: &str) -> Self {
+        let pubdate = match DateTime::parse_from_rfc2822(pubdate) {
+            Ok(d) => d,
+            Err(err) => panic!("{}", err),
+        };
         let post = Post {
+            pubdate,
             url: String::from(url),
             title: String::from(title),
-            pubdate: String::from(pubdate),
             md: String::from(md),
             html: String::from(html),
         };
@@ -137,6 +141,7 @@ impl Post {
 
     fn filename(&self) -> String {
         let slug = self.slug().expect("unable to get slug for filename");
-        format!("{}.md", slug)
+        let date = self.pubdate.format("%m-%d-%Y");
+        format!("{}-{}.md", date, slug)
     }
 }

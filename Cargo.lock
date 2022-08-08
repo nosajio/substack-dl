@@ -81,7 +81,9 @@ dependencies = [
  "js-sys",
  "num-integer",
  "num-traits",
+ "time",
  "wasm-bindgen",
+ "winapi",
 ]
 
 [[package]]
@@ -1186,6 +1188,7 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 name = "substack_export"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "html2md",
  "reqwest",
  "rss",
