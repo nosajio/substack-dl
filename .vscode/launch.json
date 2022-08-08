@@ -7,37 +7,30 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'substack_export'",
+      "name": "Debug executable 'substack_dl'",
       "cargo": {
-        "args": [
-          "build",
-          "--bin=substack_export",
-          "--package=substack_export"
-        ],
+        "args": ["build", "--bin=substack_dl", "--package=substack_dl"],
         "filter": {
-          "name": "substack_export",
+          "name": "substack_dl",
           "kind": "bin"
         }
       },
-      "args": [
-        "https://nosaj.substack.com",
-        "debug_files"
-      ],
+      "args": ["https://nosaj.substack.com", "debug_files"],
       "cwd": "${workspaceFolder}"
     },
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'substack_export'",
+      "name": "Debug unit tests in executable 'substack_dl'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=substack_export",
-          "--package=substack_export"
+          "--bin=substack_dl",
+          "--package=substack_dl"
         ],
         "filter": {
-          "name": "substack_export",
+          "name": "substack_dl",
           "kind": "bin"
         }
       },

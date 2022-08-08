@@ -1,4 +1,4 @@
-# Substack Export
+# Substack Downloader
 
 A small cli tool that downloads the public posts from a substack newsletter and saves them locally.
 

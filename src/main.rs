@@ -3,7 +3,7 @@ mod parser;
 use promptly::prompt_default;
 
 // interface:
-// substack_export name.substack.com
+// substack-dl name.substack.com
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
