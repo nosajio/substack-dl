@@ -22,3 +22,12 @@ Argument      | What it does
 ```sh
 substack-dl nosaj.substack.com ~/save_posts_location --overwrite --fmt-all
 ```
+
+## Todo
+  - [x] Download and parse posts.
+  - [x] Save posts to disk as markdown files.
+  - [ ] Unit tests for fs operations.
+  - [ ] Implement non-tmp functionality.
+  - [ ] Implement overwrite flags.
+  - [ ] Implement HTML save.
+  - [ ] Implement format flags.
