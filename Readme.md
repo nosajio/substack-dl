@@ -12,7 +12,7 @@ substack-dl url save-dir [--overwrite] [--fmt-html] [--fmt-all]
 
 Argument      | What it does
 --------------|-----------------------------------------------------------------------------------------------------
-`url`         | The substack domain <domain>.substack.com
+`url`         | The substack domain \<domain\>.substack.com
 `save-dir`    | The local directory where posts should be saved. If the directory doesn't exist, it will be created.
 `--overwrite` | Automatically overwrite existing directory (be careful).
 `--fmt-html`  | Store HTML versions instead of Markdown.

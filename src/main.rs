@@ -1,9 +1,9 @@
+// Call substack-dl to download all posts from a substack newsletter. For the 
+// full readme, go to: https://github.com/nosajio/substack-dl
+
 mod parser;
 
 use promptly::prompt_default;
-
-// interface:
-// substack-dl name.substack.com
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
