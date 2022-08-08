@@ -1,11 +1,12 @@
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset};
+use core::fmt;
 use html2md::parse_html;
 use rss::Channel;
 use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub struct Parser {
     pub output_dir: String,
@@ -15,10 +16,33 @@ pub struct Parser {
 
 #[derive(Debug)]
 pub enum ParserError {
-    NoItems,
-    ParseHTML,
-    FetchItems,
     SaveItems,
+    NoOverwrite,
+    CantDelete,
+}
+
+impl fmt::Display for ParserError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            ParserError::CantDelete => "Unable to delete directory",
+            ParserError::NoOverwrite => "Overwrite not allowed",
+            ParserError::SaveItems => "Successfully saved all items",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+pub enum SaveStatus {
+    Success,
+}
+
+impl fmt::Display for SaveStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SaveStatus::Success => "Successfully saved posts",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 impl Parser {
@@ -38,9 +62,7 @@ impl Parser {
             let html = item.content().unwrap();
             let md = parse_html(&html);
             items.push(Post::new(
-                html,
                 md.as_str(),
-                // [TODO] Split the slug from the URL
                 item.link().unwrap(),
                 item.title().unwrap(),
                 item.pub_date().unwrap(),
@@ -50,13 +72,52 @@ impl Parser {
         Ok(())
     }
 
-    pub fn save_files(self) -> Result<(), ParserError> {
+    pub fn save_dir_exists(&self) -> bool {
+        let dir = get_save_dir(&self.output_dir);
+        does_dir_exist(&dir)
+    }
+
+    pub fn save_files(self, overwrite: bool) -> Result<SaveStatus, ParserError> {
         println!("Saving files in {}", self.output_dir);
+        let save_dir = get_save_dir(&self.output_dir);
+
+        match does_dir_exist(&save_dir) {
+            true => {
+                if !overwrite {
+                    return Err(ParserError::NoOverwrite);
+                }
+                delete_dir(&save_dir)?;
+            }
+            false => {
+                fs::create_dir_all(&save_dir).unwrap();
+            }
+        }
+
         for it in self.items.iter() {
             println!("Write... {}", it.slug().unwrap());
             write_file(self.output_dir.as_str(), it)?;
         }
-        Ok(())
+        Ok(SaveStatus::Success)
+    }
+}
+
+fn get_save_dir(dir: &str) -> PathBuf {
+    let tmp = Path::new("/tmp");
+    let dir_path = tmp.join(dir);
+    dir_path
+}
+
+fn delete_dir(dir: &PathBuf) -> Result<bool, ParserError> {
+    match fs::remove_dir_all(dir) {
+        Ok(_) => Ok(true),
+        Err(_) => Err(ParserError::CantDelete),
+    }
+}
+
+fn does_dir_exist(dir: &PathBuf) -> bool {
+    match fs::metadata(dir) {
+        Ok(md) => md.is_dir(),
+        Err(_) => false,
     }
 }
 
@@ -73,7 +134,6 @@ fn write_file(dir: &str, item: &Post) -> Result<(), ParserError> {
         fs::create_dir_all(&dir_path).unwrap();
     }
 
-    // [todo] check if this dir exists and make it
     println!(
         "Write file: {}, {}",
         item.title,
@@ -110,12 +170,11 @@ pub struct Post {
     url: String,
     title: String,
     md: String,
-    html: String,
     pubdate: DateTime<FixedOffset>,
 }
 
 impl Post {
-    fn new(html: &str, md: &str, url: &str, title: &str, pubdate: &str) -> Self {
+    fn new(md: &str, url: &str, title: &str, pubdate: &str) -> Self {
         let pubdate = match DateTime::parse_from_rfc2822(pubdate) {
             Ok(d) => d,
             Err(err) => panic!("{}", err),
@@ -125,7 +184,6 @@ impl Post {
             url: String::from(url),
             title: String::from(title),
             md: String::from(md),
-            html: String::from(html),
         };
         post
     }
