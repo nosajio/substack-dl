@@ -1,9 +1,10 @@
 use html2md::parse_html;
 use rss::Channel;
-use std::env;
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 // use std::path::Path;
 
 pub struct Parser {
@@ -52,7 +53,7 @@ impl Parser {
     pub fn save_files(self) -> Result<(), ParserError> {
         println!("Saving files in {}", self.output_dir);
         for it in self.items.iter() {
-            println!("Write... {}", it.slug);
+            println!("Write... {}", it.slug().unwrap());
             write_file(self.output_dir.as_str(), it)?;
         }
         Ok(())
@@ -61,9 +62,17 @@ impl Parser {
 
 fn write_file(dir: &str, item: &Post) -> Result<(), ParserError> {
     // First save into tmp, and move to provided directory
-    // [todo] actually use /tmp, not the random dir this returns??
-    let tmp = env::temp_dir();
-    let file_full_path = tmp.join(dir).join(item.filename());
+    let tmp = Path::new("/tmp");
+    let dir_path = tmp.join(dir);
+    let file_full_path = dir_path.join(item.filename());
+
+    if !match fs::metadata(&dir_path) {
+        Ok(md) => md.is_dir(),
+        Err(_) => false,
+    } {
+        fs::create_dir_all(&dir_path).unwrap();
+    }
+
     // [todo] check if this dir exists and make it
     println!(
         "Write file: {}, {}",
@@ -98,7 +107,7 @@ fn get_substack_url(domain: String) -> Result<String, Box<dyn Error>> {
 }
 
 pub struct Post {
-    slug: String,
+    url: String,
     title: String,
     md: String,
     html: String,
@@ -106,9 +115,9 @@ pub struct Post {
 }
 
 impl Post {
-    fn new(html: &str, md: &str, slug: &str, title: &str, pubdate: &str) -> Self {
+    fn new(html: &str, md: &str, url: &str, title: &str, pubdate: &str) -> Self {
         let post = Post {
-            slug: String::from(slug),
+            url: String::from(url),
             title: String::from(title),
             pubdate: String::from(pubdate),
             md: String::from(md),
@@ -117,7 +126,17 @@ impl Post {
         post
     }
 
+    fn slug(&self) -> Result<&str, String> {
+        let parts = self.url.split("/");
+        let slug = match parts.last() {
+            Some(slug) => Ok(slug),
+            None => Err(String::from("unable to split url to find the slug")),
+        };
+        slug
+    }
+
     fn filename(&self) -> String {
-        format!("{}.md", "test")
+        let slug = self.slug().expect("unable to get slug for filename");
+        format!("{}.md", slug)
     }
 }
